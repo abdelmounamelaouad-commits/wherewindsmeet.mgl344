@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Where Winds Meet</title>
+
+  <!-- Fonts — preconnect first for speed -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─────────────────────────────────────────────────────────
+       RESET
+    ───────────────────────────────────────────────────────── */
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* ─────────────────────────────────────────────────────────
+       CSS VARIABLES
+    ───────────────────────────────────────────────────────── */
+    :root {
+      --gold:        #d4af37;
+      --gold-light:  #f5d96b;
+      --gold-dark:   #a8860e;
+      --bronze:      #c88b2a;
+      --white:       #ffffff;
+      --parchment:   #f0e6d0;
+
+      /* Reusable text-shadow stacks — legibility without dark overlays */
+      --ts-hard:
+        0 1px 0   #000,
+        0 2px 6px  rgba(0,0,0,.98),
+        0 0  20px  rgba(0,0,0,.95),
+        1px  1px 0 rgba(0,0,0,.9),
+        -1px -1px 0 rgba(0,0,0,.9);
+
+      --ts-title:
+        0 2px 0    rgba(0,0,0,1),
+        0 4px 14px rgba(0,0,0,.98),
+        0 8px 36px rgba(0,0,0,.92),
+        0 0  70px  rgba(0,0,0,.80),
+        0 -1px 0   rgba(255,255,255,.10),
+        0 0  90px  rgba(212,175,55,.15);
+    }
+
+    /* ─────────────────────────────────────────────────────────
+       BASE — black body so the instant-load state isn't blank
+    ───────────────────────────────────────────────────────── */
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;           /* shows while first video frame loads */
+      font-family: 'Montserrat', Arial, sans-serif;
+    }
+
+    /* ─────────────────────────────────────────────────────────
+       VIDEO — fullscreen, bright, object-fit cover
+       No JS gate — browser starts buffering & playing immediately
+    ───────────────────────────────────────────────────────── */
+    #bg-video {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 0;
+    }
+
+    /* ─────────────────────────────────────────────────────────
+       OVERLAYS
+       ● ZERO centre black blanket — video stays 100% bright
+       ● Only surgical edge gradients for UI legibility
+    ───────────────────────────────────────────────────────── */
+
+    /* Radial vignette — darkens outer ~25% ring only */
+    .ov-edge {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      background: radial-gradient(
+        ellipse at center,
+        transparent 46%,
+        rgba(0,0,0,.20) 72%,
+        rgba(0,0,0,.50) 100%
+      );
+      pointer-events: none;
+    }
+
+    /* Top strip — very faint, title zone only */
+    .ov-top {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 30%;
+      z-index: 2;
+      background: linear-gradient(
+        to bottom,
+        rgba(0,0,0,.30) 0%,
+        rgba(0,0,0,.06) 55%,
+        transparent     100%
+      );
+      pointer-events: none;
+    }
+
+    /* Bottom strip — moderate, keeps bottom-corner UI readable */
+    .ov-bottom {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 44%;
+      z-index: 2;
+      background: linear-gradient(
+        to top,
+        rgba(0,0,0,.62) 0%,
+        rgba(0,0,0,.26) 52%,
+        transparent     100%
+      );
+      pointer-events: none;
+    }
+
+    /* ─────────────────────────────────────────────────────────
+       MAIN UI CONTAINER
+    ───────────────────────────────────────────────────────── */
+    #ui {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       TOP CENTER — eyebrow · title · subtitle row
+    ═══════════════════════════════════════════════════════ */
+    #top-center {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 48px;
+      text-align: center;
+      width: max-content;
+      max-width: 94vw;
+    }
+
+    /* AAA · NEXT-GEN · OPEN WORLD */
+    .eyebrow {
+      font-family: 'Montserrat', Arial, sans-serif;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: .44em;
+      color: var(--gold-light);
+      text-transform: uppercase;
+      margin-bottom: 16px;
+      text-shadow: var(--ts-hard);
+    }
+
+    /* WHERE WINDS MEET */
+    .main-title {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(36px, 7.6vw, 100px);
+      font-weight: 900;
+      color: var(--white);
+      text-transform: uppercase;
+      letter-spacing: .22em;
+      line-height: 1;
+      margin-bottom: 22px;
+      position: relative;
+      overflow: hidden;
+      text-shadow: var(--ts-title);
+    }
+
+    /* Periodic shine sweep across title */
+    .main-title::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -130%;
+      width: 55%;
+      height: 100%;
+      background: linear-gradient(
+        108deg,
+        transparent 28%,
+        rgba(255,255,255,.10) 50%,
+        transparent 72%
+      );
+      animation: titleShine 8s ease-in-out infinite;
+    }
+
+    @keyframes titleShine {
+      0%   { left: -130%; }
+      38%  { left: -130%; }
+      56%  { left:  170%; }
+      100% { left:  170%; }
+    }
+
+    /* WUXIA · FREE TO PLAY  ──  line  ──  text  ──  line */
+    .subtitle-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .sub-line {
+      width: 52px;
+      height: 1px;
+    }
+
+    .sub-line-l { background: linear-gradient(to right, transparent, var(--gold)); }
+    .sub-line-r { background: linear-gradient(to left,  transparent, var(--gold)); }
+
+    .sub-text {
+      font-family: 'Montserrat', Arial, sans-serif;
+      font-size: 9.5px;
+      font-weight: 700;
+      letter-spacing: .44em;
+      color: var(--gold-light);
+      text-transform: uppercase;
+      text-shadow: var(--ts-hard);
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       BOTTOM LEFT — platform label + CTA + sub-text
+    ═══════════════════════════════════════════════════════ */
+    #bottom-left {
+      position: absolute;
+      bottom: 56px;
+      left: 56px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 13px;
+      pointer-events: all;
+    }
+
+    /* ── "AVAILABLE FOR WINDOWS ONLY" row ── */
+    .platform-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .platform-row svg {
+      flex-shrink: 0;
+      filter: drop-shadow(0 0 5px rgba(0,0,0,.95));
+    }
+
+    .platform-label {
+      font-family: 'Montserrat', Arial, sans-serif;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: .30em;
+      color: var(--gold);
+      text-transform: uppercase;
+      text-shadow: var(--ts-hard);
+    }
+
+    /* ── CTA wrapper — holds the breathing pulse ring ── */
+    .cta-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+
+    /* Breathing pulse ring — matches button skew */
+    .cta-wrapper::before {
+      content: '';
+      position: absolute;
+      inset: -6px -12px;
+      transform: skewX(-15deg);
+      border: 1px solid rgba(212,175,55,.50);
+      opacity: 0;
+      animation: pulseRing 3.2s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    @keyframes pulseRing {
+      0%   { opacity: 0;   inset: -6px  -12px; }
+      40%  { opacity: .55; inset: -11px -20px; }
+      100% { opacity: 0;   inset: -24px -32px; }
+    }
+
+    /* ── CTA anchor — parallelogram via skewX(-15deg) ── */
+    .cta-btn {
+      display: inline-block;
+      position: relative;
+      padding: 15px 46px;
+      transform: skewX(-15deg);
+      background: linear-gradient(
+        135deg,
+        #8b6914  0%,
+        #b88d1a 18%,
+        #d4af37 42%,
+        #f2d675 62%,
+        #c09020 80%,
+        #9a7010 100%
+      );
+      border: 1px solid rgba(255,230,120,.55);
+      cursor: pointer;
+      text-decoration: none;
+      overflow: hidden;
+      outline: none;
+      box-shadow:
+        0 0  26px rgba(212,175,55,.55),
+        0 4px 20px rgba(0,0,0,.55),
+        inset 0 1px 0 rgba(255,255,255,.25);
+      transition: filter .22s ease, box-shadow .22s ease, transform .22s ease;
+    }
+
+    .cta-btn:hover {
+      filter: brightness(1.18) saturate(1.15);
+      box-shadow:
+        0 0  52px rgba(212,175,55,.95),
+        0 6px 28px rgba(0,0,0,.60),
+        inset 0 1px 0 rgba(255,255,255,.32);
+      transform: skewX(-15deg) translateY(-3px);
+    }
+
+    /* Pause shine on hover */
+    .cta-btn:hover .cta-shine {
+      animation-play-state: paused;
+    }
+
+    /* White shine sweep */
+    .cta-shine {
+      position: absolute;
+      top: 0;
+      left: -90%;
+      width: 52%;
+      height: 100%;
+      background: linear-gradient(
+        108deg,
+        transparent 26%,
+        rgba(255,255,255,.65) 50%,
+        transparent 74%
+      );
+      animation: btnShine 3.8s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    @keyframes btnShine {
+      0%   { left: -90%; }
+      26%  { left: -90%; }
+      46%  { left:  140%; }
+      100% { left:  140%; }
+    }
+
+    /* Button text — counter-skewed so letters read straight */
+    .cta-text {
+      position: relative;
+      z-index: 1;
+      display: block;
+      transform: skewX(15deg);
+      font-family: 'Cinzel Decorative', 'Cinzel', serif;
+      font-size: 14.5px;
+      font-weight: 700;
+      letter-spacing: .18em;
+      color: #1a0d00;
+      text-transform: uppercase;
+      white-space: nowrap;
+      text-shadow: 0 1px 0 rgba(255,230,100,.40);
+    }
+
+    /* Sub-text below button */
+    .cta-subtext {
+      font-family: 'Montserrat', Arial, sans-serif;
+      font-size: 9.5px;
+      font-weight: 600;
+      letter-spacing: .30em;
+      color: var(--parchment);
+      text-transform: uppercase;
+      padding-left: 2px;
+      text-shadow: var(--ts-hard);
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       BOTTOM RIGHT — headline · paragraph · 3 badges
+    ═══════════════════════════════════════════════════════ */
+    #bottom-right {
+      position: absolute;
+      bottom: 56px;
+      right: 56px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 13px;
+      max-width: 420px;
+      text-align: right;
+    }
+
+    .br-headline {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(12px, 1.28vw, 16px);
+      font-weight: 700;
+      color: var(--white);
+      letter-spacing: .06em;
+      line-height: 1.5;
+      text-shadow: var(--ts-title);
+    }
+
+    .br-paragraph {
+      font-family: 'Montserrat', Arial, sans-serif;
+      font-size: clamp(9.5px, .9vw, 12px);
+      font-weight: 400;
+      color: var(--parchment);
+      line-height: 1.85;
+      letter-spacing: .04em;
+      text-shadow: var(--ts-hard);
+    }
+
+    /* ── Badges — 3 boxes, right-aligned ── */
+    .badges-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 7px;
+    }
+
+    .badge {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 13px;
+      border: 1px solid var(--gold);
+      background: rgba(6,4,0,.52);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    .badge-icon {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+    }
+
+    .badge-label {
+      font-family: 'Montserrat', Arial, sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: .22em;
+      color: var(--gold-light);
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       SOUND TOGGLE — top right corner
+    ═══════════════════════════════════════════════════════ */
+    #sound-btn {
+      position: fixed;
+      top: 22px;
+      right: 26px;
+      z-index: 20;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 1px solid rgba(212,175,55,.50);
+      background: rgba(0,0,0,.35);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color .2s, background .2s;
+      pointer-events: all;
+    }
+
+    #sound-btn:hover {
+      border-color: var(--gold);
+      background: rgba(212,175,55,.18);
+    }
+
+    #sound-btn svg {
+      width: 18px;
+      height: 18px;
+      fill: var(--gold-light);
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       UNMUTE HINT — fades out on first interaction
+    ═══════════════════════════════════════════════════════ */
+    #unmute-hint {
+      position: fixed;
+      bottom: 46%;
+      left: 50%;
+      transform: translateX(-50%) translateY(50%);
+      z-index: 20;
+      font-family: 'Montserrat', Arial, sans-serif;
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: .30em;
+      color: rgba(212,175,55,.92);
+      text-transform: uppercase;
+      pointer-events: none;
+      white-space: nowrap;
+      text-shadow:
+        0 0 20px rgba(0,0,0,.98),
+        0 2px 8px rgba(0,0,0,.98);
+      animation: hintPulse 2.2s ease-in-out infinite;
+      transition: opacity .8s ease;
+    }
+
+    #unmute-hint.gone {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    @keyframes hintPulse {
+      0%, 100% { opacity: .38; }
+      50%       { opacity: 1;   }
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       RESPONSIVE
+    ═══════════════════════════════════════════════════════ */
+    @media (max-width: 960px) {
+      #bottom-left {
+        bottom: 220px;
+        left: 26px;
+      }
+      #bottom-right {
+        bottom: 26px;
+        left: 14px;
+        right: 14px;
+        max-width: 100%;
+        align-items: center;
+        text-align: center;
+      }
+      .badges-grid { justify-content: center; }
+    }
+
+    @media (max-width: 600px) {
+      #top-center { padding-top: 28px; }
+
+      .main-title {
+        font-size: 30px;
+        letter-spacing: .10em;
+      }
+
+      .eyebrow { font-size: 8.5px; letter-spacing: .30em; }
+
+      #bottom-left {
+        bottom: 240px;
+        left: 50%;
+        transform: translateX(-50%);
+        align-items: center;
+      }
+
+      .cta-text  { font-size: 12px; }
+      .cta-btn   { padding: 12px 28px; }
+
+      #bottom-right { bottom: 18px; gap: 10px; }
+
+      .sub-line    { width: 28px; }
+      .badge       { padding: 5px 9px; }
+      .badge-label { font-size: 7.5px; letter-spacing: .14em; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════
+       VIDEO — NEVER change this URL
+       preload="auto"  → browser fetches & plays immediately
+       No JS gate, no loading screen, no delay of any kind
+  ═══════════════════════════════════════════════════════ -->
+  <video
+    id="bg-video"
+    src="https://res.cloudinary.com/dtgdbdcp0/video/upload/v1773533669/Where_Winds_Meet_on_Steam.mp4_1_1_1_yjlvns.mp4"
+    autoplay
+    muted
+    loop
+    playsinline
+    preload="auto"
+  ></video>
+
+  <!-- ═══════════════════════════════════════════════════════
+       OVERLAYS — edge-only, centre is 100% transparent/bright
+  ═══════════════════════════════════════════════════════ -->
+  <div class="ov-edge"></div>
+  <div class="ov-top"></div>
+  <div class="ov-bottom"></div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       SOUND TOGGLE — top right
+  ═══════════════════════════════════════════════════════ -->
+  <button id="sound-btn" title="Toggle Sound" aria-label="Toggle Sound">
+    <!-- Muted icon — visible by default -->
+    <svg id="icon-muted" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M16.5 12A4.5 4.5 0 0 0 14 7.97V10l2.48 2.48c.01-.16.02-.31.02-.48zM19 12c0 .94-.2 1.82-.54 2.64l1.51 1.51A9.0 9.0 0 0 0 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3 3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25A6.97 6.97 0 0 1 14 18.98v2.06A9.0 9.0 0 0 0 17.54 19l1.73 1.73L20.73 19 5.27 3.54 4.27 3zM12 4 9.91 6.09 12 8.18V4z"/>
+    </svg>
+    <!-- Sound icon — shown when unmuted -->
+    <svg id="icon-sound" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="display:none;">
+      <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+    </svg>
+  </button>
+
+  <!-- ═══════════════════════════════════════════════════════
+       UNMUTE HINT
+  ═══════════════════════════════════════════════════════ -->
+  <div id="unmute-hint">&#9654; Click anywhere to unmute</div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       MAIN UI
+  ═══════════════════════════════════════════════════════ -->
+  <div id="ui">
+
+    <!-- ── TOP CENTER ─────────────────────────────────────── -->
+    <div id="top-center">
+      <p class="eyebrow">AAA &middot; NEXT-GEN &middot; OPEN WORLD</p>
+      <h1 class="main-title">WHERE WINDS MEET</h1>
+      <div class="subtitle-row">
+        <span class="sub-line sub-line-l"></span>
+        <span class="sub-text">WUXIA &middot; FREE TO PLAY</span>
+        <span class="sub-line sub-line-r"></span>
+      </div>
+    </div>
+
+    <!-- ── BOTTOM LEFT ──────────────────────────────────────
+         Order (top → bottom):
+           1. AVAILABLE FOR WINDOWS ONLY  (gold + Windows icon)
+           2. PLAY FOR FREE NOW button    (parallelogram)
+           3. DOWNLOAD FREE · NO PAY-TO-WIN
+    ──────────────────────────────────────────────────── -->
+    <div id="bottom-left">
+
+      <!-- Platform row -->
+      <div class="platform-row">
+        <!-- Windows 4-square logo in gold -->
+        <svg width="15" height="15" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <rect x="1"    y="1"    width="10.5" height="10.5" rx=".6" fill="#d4af37"/>
+          <rect x="12.5" y="1"    width="10.5" height="10.5" rx=".6" fill="#d4af37"/>
+          <rect x="1"    y="12.5" width="10.5" height="10.5" rx=".6" fill="#d4af37"/>
+          <rect x="12.5" y="12.5" width="10.5" height="10.5" rx=".6" fill="#d4af37"/>
+        </svg>
+        <span class="platform-label">Available for Windows Only</span>
+      </div>
+
+      <!-- CTA button -->
+      <div class="cta-wrapper">
+        <a
+          class="cta-btn"
+          href="https://to.wendiro.com/u?k=9db47141846349488810b469b5a18a32&via=25826"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <span class="cta-shine"></span>
+          <span class="cta-text">PLAY FOR FREE NOW &#9654;</span>
+        </a>
+      </div>
+
+      <!-- Sub-text -->
+      <span class="cta-subtext">DOWNLOAD FREE &nbsp;&middot;&nbsp; NO PAY-TO-WIN</span>
+
+    </div><!-- /#bottom-left -->
+
+    <!-- ── BOTTOM RIGHT ─────────────────────────────────────
+         Headline · Paragraph · 3 gold-bordered badges
+    ──────────────────────────────────────────────────── -->
+    <div id="bottom-right">
+
+      <p class="br-headline">Experience the AAA Next-Gen Wuxia Open World</p>
+      <p class="br-paragraph">
+        A vast living world forged in ancient martial arts legend —<br>
+        explore, battle, and master the wind.
+      </p>
+
+      <div class="badges-grid">
+
+        <!-- UNREAL ENGINE 5 -->
+        <div class="badge">
+          <span class="badge-icon">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="10" stroke="#d4af37" stroke-width="1.8"/>
+              <text x="12" y="16.5" text-anchor="middle" fill="#d4af37" font-size="11" font-family="Arial" font-weight="900">U</text>
+            </svg>
+          </span>
+          <span class="badge-label">Unreal Engine 5</span>
+        </div>
+
+        <!-- AAA QUALITY -->
+        <div class="badge">
+          <span class="badge-icon">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="#d4af37" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+          </span>
+          <span class="badge-label">AAA Quality</span>
+        </div>
+
+        <!-- FREE TO PLAY -->
+        <div class="badge">
+          <span class="badge-icon">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#d4af37" stroke-width="1.8" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+          </span>
+          <span class="badge-label">Free to Play</span>
+        </div>
+
+      </div><!-- /.badges-grid -->
+
+    </div><!-- /#bottom-right -->
+
+  </div><!-- /#ui -->
+
+  <!-- ═══════════════════════════════════════════════════════
+       JAVASCRIPT
+       ─ No loading screen, no preloader, no JS delay gates
+       ─ Video plays as soon as the browser has enough data
+  ═══════════════════════════════════════════════════════ -->
+  <script>
+    const video     = document.getElementById('bg-video');
+    const soundBtn  = document.getElementById('sound-btn');
+    const iconMuted = document.getElementById('icon-muted');
+    const iconSound = document.getElementById('icon-sound');
+    const hint      = document.getElementById('unmute-hint');
+
+    /* ── Keep speaker icon in sync with muted state ── */
+    function syncIcon() {
+      const m = video.muted;
+      iconMuted.style.display = m ? '' : 'none';
+      iconSound.style.display = m ? 'none' : '';
+    }
+
+    /* ── Unmute on FIRST click anywhere on the page ──
+       (exact implementation requested: body.onclick)    */
+    let unmuted = false;
+    document.body.onclick = function () {
+      if (!unmuted) {
+        video.muted = false;
+        video.play().catch(() => {});
+        unmuted = true;
+        hint.classList.add('gone');
+        syncIcon();
+      }
+    };
+
+    /* ── Sound toggle button (top-right) ── */
+    soundBtn.addEventListener('click', function (e) {
+      e.stopPropagation();           /* don't also fire body.onclick */
+      video.muted = !video.muted;
+      if (!video.muted) {
+        unmuted = true;
+        hint.classList.add('gone');
+        video.play().catch(() => {});
+      }
+      syncIcon();
+    });
+
+    /* ── Auto-hide hint after 5.5 s regardless of click ── */
+    setTimeout(() => hint.classList.add('gone'), 5500);
+
+    /* ── Attempt play as soon as browser has enough data ──
+       No waiting for full download — starts instantly       */
+    video.play().catch(() => {
+      /* Autoplay blocked — browser will retry on interaction */
+    });
+  </script>
+
+</body>
+</html>
